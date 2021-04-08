@@ -1,8 +1,12 @@
 package com.udacity.project4.locationreminders.reminderslist
 
 import android.os.Bundle
+import android.util.Log
 import android.view.*
 import androidx.databinding.DataBindingUtil
+import androidx.lifecycle.Observer
+import androidx.navigation.fragment.findNavController
+import com.google.firebase.auth.FirebaseAuth
 import com.udacity.project4.R
 import com.udacity.project4.base.BaseFragment
 import com.udacity.project4.base.NavigationCommand
@@ -32,17 +36,36 @@ class ReminderListFragment : BaseFragment() {
         setTitle(getString(R.string.app_name))
 
         binding.refreshLayout.setOnRefreshListener { _viewModel.loadReminders() }
-
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        Log.i("ReminderListFragment", "Creating view for reminder list fragment")
         binding.lifecycleOwner = this
         setupRecyclerView()
         binding.addReminderFAB.setOnClickListener {
             navigateToAddReminder()
         }
+        _viewModel.authenticationState.observe(viewLifecycleOwner, Observer {
+            authenticationState ->
+            when (authenticationState){
+                RemindersListViewModel.AuthenticationState.AUTHENTICATED-> {
+                    Log.i("ReminderListFragment", "User was authenticated in ReminderFragment")
+                }
+                RemindersListViewModel.AuthenticationState.UNAUTHENTICATED-> {
+                    Log.i("ReminderListFragment", "Unauthenticated user in ReminderFragment")
+                    val navController = findNavController()
+                    navController.navigate(R.id.loginFragment)
+                }
+                RemindersListViewModel.AuthenticationState.INVALID_AUTHENTICATION-> {
+                    Log.i("ReminderListFragment", "Invalid authentication in ReminderFragment")
+                    val navController = findNavController()
+                    navController.navigate(R.id.loginFragment)
+                }
+            }
+        })
+
     }
 
     override fun onResume() {
@@ -72,6 +95,8 @@ class ReminderListFragment : BaseFragment() {
         when (item.itemId) {
             R.id.logout -> {
 //                TODO: add the logout implementation
+                Log.i("ReminderListFragment", "User clicked the logout button")
+                FirebaseAuth.getInstance().signOut()
             }
         }
         return super.onOptionsItemSelected(item)
