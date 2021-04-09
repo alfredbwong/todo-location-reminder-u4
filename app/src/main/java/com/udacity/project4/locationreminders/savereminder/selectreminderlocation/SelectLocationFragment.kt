@@ -100,6 +100,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         setMapLongClick(map)
         setPoiClick(map)
         enableMyLocation()
+        moveToCurrentLocation()
     }
 
 
@@ -167,7 +168,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
             grantResults: IntArray) {
         // Check if location permissions are granted and if so enable the
         // location data layer.
-        Log.i("SelectLocationFragment", "onRequestPermissionResult...")
+//        Log.i("SelectLocationFragment", "onRequestPermissionResult...requestCode: ${requestCode == REQUEST_LOCATION_PERMISSION} ${grantResults.size > 0} ${grantResults[0] == PackageManager.PERMISSION_GRANTED}")
         if (requestCode == REQUEST_LOCATION_PERMISSION) {
             if (grantResults.size > 0 && (grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
                 Log.i("SelectLocationFragment", "onRequestPermissionResult granted")
