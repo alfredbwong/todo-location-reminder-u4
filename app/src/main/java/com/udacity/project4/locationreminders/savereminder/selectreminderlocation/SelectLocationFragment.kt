@@ -6,7 +6,6 @@ import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import android.view.*
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -16,7 +15,6 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.udacity.project4.R
 import com.udacity.project4.base.BaseFragment
@@ -34,7 +32,6 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     override val _viewModel: SaveReminderViewModel by inject()
     private lateinit var binding: FragmentSelectLocationBinding
     private val REQUEST_LOCATION_PERMISSION = 1
-    private var marker: Marker? = null
     private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
 
     override fun onCreateView(
@@ -76,15 +73,23 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
         // TODO: Change the map type based on the user's selection.
         R.id.normal_map -> {
+            map.mapType = GoogleMap.MAP_TYPE_NORMAL
+
             true
         }
         R.id.hybrid_map -> {
+            map.mapType = GoogleMap.MAP_TYPE_HYBRID
+
             true
         }
         R.id.satellite_map -> {
+            map.mapType = GoogleMap.MAP_TYPE_SATELLITE
+
             true
         }
         R.id.terrain_map -> {
+            map.mapType = GoogleMap.MAP_TYPE_TERRAIN
+
             true
         }
         else -> super.onOptionsItemSelected(item)
@@ -95,7 +100,6 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         setMapLongClick(map)
         setPoiClick(map)
         enableMyLocation()
-        moveToCurrentLocation()
     }
 
 
@@ -107,20 +111,18 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
     private fun enableMyLocation() {
         if (isPermissionGranted()) {
-            if (ActivityCompat.checkSelfPermission(this.requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                    && ActivityCompat.checkSelfPermission(this.requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-
-                return
-            }
+            Log.i("SelectLocationFragment", "enableMyLocation, isPermissionGranted = true")
             map.isMyLocationEnabled=true
+
+
 
         }
         else {
-            ActivityCompat.requestPermissions(
-                    this.requireActivity(),
+            requestPermissions(
                     arrayOf<String>(Manifest.permission.ACCESS_FINE_LOCATION),
                     REQUEST_LOCATION_PERMISSION
             )
+
         }
     }
     private fun setMapLongClick(map: GoogleMap){
@@ -151,14 +153,27 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         fusedLocationProviderClient.lastLocation.addOnSuccessListener {
             location ->
             if (location != null){
-                Log.i("selectLocation", "Lat: ${location.latitude} Long: ${location.longitude}")
+                Log.i("SelectLocationFragment", "Lat: ${location.latitude} Long: ${location.longitude}")
                 val currentLatLng = LatLng(location.latitude, location.longitude)
 
                 map.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng,15f))
-//                map.addMarker(MarkerOptions().position(currentLatLng))
 
             }
         }
     }
-
+    override fun onRequestPermissionsResult(
+            requestCode: Int,
+            permissions: Array<String>,
+            grantResults: IntArray) {
+        // Check if location permissions are granted and if so enable the
+        // location data layer.
+        Log.i("SelectLocationFragment", "onRequestPermissionResult...")
+        if (requestCode == REQUEST_LOCATION_PERMISSION) {
+            if (grantResults.size > 0 && (grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+                Log.i("SelectLocationFragment", "onRequestPermissionResult granted")
+                enableMyLocation()
+                moveToCurrentLocation()
+            }
+        }
+    }
 }
