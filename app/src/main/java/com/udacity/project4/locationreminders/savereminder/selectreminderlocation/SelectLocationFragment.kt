@@ -6,8 +6,13 @@ import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import android.view.*
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.ContextCompat.checkSelfPermission
 import androidx.databinding.DataBindingUtil
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.fragment.findNavController
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -15,6 +20,7 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.udacity.project4.R
 import com.udacity.project4.base.BaseFragment
@@ -33,6 +39,8 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     private lateinit var binding: FragmentSelectLocationBinding
     private val REQUEST_LOCATION_PERMISSION = 1
     private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
+    private var marker : Marker? = null
+    private var isPoISelected = false
 
     override fun onCreateView(
             inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -63,6 +71,16 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         //        TODO: When the user confirms on the selected location,
         //         send back the selected location details to the view model
         //         and navigate back to the previous fragment to save the reminder and add the geofence
+        binding.saveLocationButton.setOnClickListener{
+            if (marker != null) {
+                _viewModel.latitude.value = marker!!.position.latitude
+                _viewModel.longitude.value = marker!!.position.longitude
+                _viewModel.reminderSelectedLocationStr.value = if (isPoISelected) marker!!.title else "Custom Location"
+
+                val navController = findNavController()
+                navController.popBackStack()
+            }
+        }
     }
 
 
@@ -113,6 +131,17 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     private fun enableMyLocation() {
         if (isPermissionGranted()) {
             Log.i("SelectLocationFragment", "enableMyLocation, isPermissionGranted = true")
+            if (checkSelfPermission(this.requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                    && checkSelfPermission(this.requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                // TODO: Consider calling
+                //    ActivityCompat#requestPermissions
+                // here to request the missing permissions, and then overriding
+                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                //                                          int[] grantResults)
+                // to handle the case where the user grants the permission. See the documentation
+                // for ActivityCompat#requestPermissions for more details.
+                return
+            }
             map.isMyLocationEnabled=true
 
 
@@ -128,13 +157,15 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     }
     private fun setMapLongClick(map: GoogleMap){
         map.setOnMapClickListener { latLng->
+            map.clear()
             val snippet = String.format(
                     Locale.getDefault(),
                     "Lat: %1$.5f, Long: %2$.5f",
                     latLng.latitude,
                     latLng.longitude
             )
-            map.addMarker(MarkerOptions()
+            isPoISelected = false
+            marker = map.addMarker(MarkerOptions()
                     .position(latLng)
                     .title(getString(R.string.dropped_pin))
                     .snippet(snippet)
@@ -143,7 +174,9 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     }
     private fun setPoiClick(map: GoogleMap){
         map.setOnPoiClickListener{ poi->
-            val poiMarker = map.addMarker(MarkerOptions()
+            map.clear()
+            isPoISelected = true
+            marker = map.addMarker(MarkerOptions()
                     .position(poi.latLng)
                     .title(poi.name))
         }
@@ -151,6 +184,17 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     private fun moveToCurrentLocation(){
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context!!)
 
+        if (checkSelfPermission(this.requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                && checkSelfPermission(this.requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return
+        }
         fusedLocationProviderClient.lastLocation.addOnSuccessListener {
             location ->
             if (location != null){
