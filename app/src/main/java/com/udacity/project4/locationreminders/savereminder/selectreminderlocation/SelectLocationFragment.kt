@@ -2,33 +2,30 @@ package com.udacity.project4.locationreminders.savereminder.selectreminderlocati
 
 
 import android.Manifest
-import android.app.Activity
-import android.content.Intent
-import android.content.IntentSender
 import android.content.pm.PackageManager
-import android.content.res.Resources
 import android.os.Bundle
 import android.util.Log
 import android.view.*
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
-import com.google.android.gms.common.api.ApiException
-import com.google.android.gms.common.api.ResolvableApiException
-import com.google.android.gms.location.*
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.*
-import com.google.android.material.snackbar.Snackbar
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.Marker
+import com.google.android.gms.maps.model.MarkerOptions
 import com.udacity.project4.R
 import com.udacity.project4.base.BaseFragment
-import com.udacity.project4.base.NavigationCommand
 import com.udacity.project4.databinding.FragmentSelectLocationBinding
 import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
 import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
 import org.koin.android.ext.android.inject
+import java.util.*
+
 
 class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
@@ -37,9 +34,11 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     override val _viewModel: SaveReminderViewModel by inject()
     private lateinit var binding: FragmentSelectLocationBinding
     private val REQUEST_LOCATION_PERMISSION = 1
+    private var marker: Marker? = null
+    private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
+            inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View? {
         binding =
             DataBindingUtil.inflate(inflater, R.layout.fragment_select_location, container, false)
@@ -93,12 +92,10 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
     override fun onMapReady(googleMap: GoogleMap) {
         map = googleMap
-        map.addMarker(
-                MarkerOptions()
-                        .position(LatLng(0.0, 0.0))
-                        .title("Marker")
-        )
+        setMapLongClick(map)
+        setPoiClick(map)
         enableMyLocation()
+        moveToCurrentLocation()
     }
 
 
@@ -116,6 +113,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
                 return
             }
             map.isMyLocationEnabled=true
+
         }
         else {
             ActivityCompat.requestPermissions(
@@ -123,6 +121,43 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
                     arrayOf<String>(Manifest.permission.ACCESS_FINE_LOCATION),
                     REQUEST_LOCATION_PERMISSION
             )
+        }
+    }
+    private fun setMapLongClick(map: GoogleMap){
+        map.setOnMapClickListener { latLng->
+            val snippet = String.format(
+                    Locale.getDefault(),
+                    "Lat: %1$.5f, Long: %2$.5f",
+                    latLng.latitude,
+                    latLng.longitude
+            )
+            map.addMarker(MarkerOptions()
+                    .position(latLng)
+                    .title(getString(R.string.dropped_pin))
+                    .snippet(snippet)
+            )
+        }
+    }
+    private fun setPoiClick(map: GoogleMap){
+        map.setOnPoiClickListener{ poi->
+            val poiMarker = map.addMarker(MarkerOptions()
+                    .position(poi.latLng)
+                    .title(poi.name))
+        }
+    }
+    private fun moveToCurrentLocation(){
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context!!)
+
+        fusedLocationProviderClient.lastLocation.addOnSuccessListener {
+            location ->
+            if (location != null){
+                Log.i("selectLocation", "Lat: ${location.latitude} Long: ${location.longitude}")
+                val currentLatLng = LatLng(location.latitude, location.longitude)
+
+                map.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng,15f))
+//                map.addMarker(MarkerOptions().position(currentLatLng))
+
+            }
         }
     }
 
