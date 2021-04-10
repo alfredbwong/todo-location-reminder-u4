@@ -73,8 +73,10 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         //         and navigate back to the previous fragment to save the reminder and add the geofence
         binding.saveLocationButton.setOnClickListener{
             if (marker != null) {
-                _viewModel.latitude.value = marker!!.position.latitude
-                _viewModel.longitude.value = marker!!.position.longitude
+                val lat = marker!!.position.latitude
+                val lng = marker!!.position.longitude
+                _viewModel.latitude.value = lat
+                _viewModel.longitude.value = lng
                 _viewModel.reminderSelectedLocationStr.value = if (isPoISelected) marker!!.title else "Custom Location"
 
                 val navController = findNavController()
