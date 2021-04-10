@@ -1,12 +1,22 @@
 package com.udacity.project4.locationreminders.reminderslist
 
+import android.Manifest
+import android.annotation.TargetApi
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
 import android.util.Log
 import android.view.*
+import android.widget.Toast
+import androidx.core.content.ContextCompat.checkSelfPermission
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
+import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
+import com.udacity.project4.BuildConfig
 import com.udacity.project4.R
 import com.udacity.project4.base.BaseFragment
 import com.udacity.project4.base.NavigationCommand
@@ -20,6 +30,8 @@ class ReminderListFragment : BaseFragment() {
     //use Koin to retrieve the ViewModel instance
     override val _viewModel: RemindersListViewModel by viewModel()
     private lateinit var binding: FragmentRemindersBinding
+    private val runningQOrLater = android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -36,12 +48,14 @@ class ReminderListFragment : BaseFragment() {
         setTitle(getString(R.string.app_name))
 
         binding.refreshLayout.setOnRefreshListener { _viewModel.loadReminders() }
+
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         Log.i("ReminderListFragment", "Creating view for reminder list fragment")
+
         binding.lifecycleOwner = this
         setupRecyclerView()
         binding.addReminderFAB.setOnClickListener {
@@ -52,11 +66,13 @@ class ReminderListFragment : BaseFragment() {
             when (authenticationState){
                 RemindersListViewModel.AuthenticationState.AUTHENTICATED-> {
                     Log.i("ReminderListFragment", "User was authenticated in ReminderFragment")
+                    requestForegroundAndBackgroundLocationPermissions()
                 }
                 RemindersListViewModel.AuthenticationState.UNAUTHENTICATED-> {
                     Log.i("ReminderListFragment", "Unauthenticated user in ReminderFragment")
                     val navController = findNavController()
                     navController.navigate(R.id.loginFragment)
+
                 }
                 RemindersListViewModel.AuthenticationState.INVALID_AUTHENTICATION-> {
                     Log.i("ReminderListFragment", "Invalid authentication in ReminderFragment")
@@ -94,7 +110,6 @@ class ReminderListFragment : BaseFragment() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.logout -> {
-//                TODO: add the logout implementation
                 Log.i("ReminderListFragment", "User clicked the logout button")
                 FirebaseAuth.getInstance().signOut()
             }
@@ -109,4 +124,74 @@ class ReminderListFragment : BaseFragment() {
         inflater.inflate(R.menu.main_menu, menu)
     }
 
+    @TargetApi(29)
+    private fun foregroundAndBackgroundLocationPermissionApproved(): Boolean {
+        val foregroundLocationApproved = (
+                PackageManager.PERMISSION_GRANTED ==
+                        checkSelfPermission(this.requireContext(),
+                                Manifest.permission.ACCESS_FINE_LOCATION))
+        val backgroundPermissionApproved =
+                if (runningQOrLater) {
+                    PackageManager.PERMISSION_GRANTED ==
+                            checkSelfPermission(
+                                    this.requireContext(), Manifest.permission.ACCESS_BACKGROUND_LOCATION
+                            )
+                } else {
+                    true
+                }
+        return foregroundLocationApproved && backgroundPermissionApproved
+    }
+    @TargetApi(29 )
+    private fun requestForegroundAndBackgroundLocationPermissions() {
+        if (foregroundAndBackgroundLocationPermissionApproved())
+            return
+        var permissionsArray = arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
+        val resultCode = when {
+            runningQOrLater -> {
+                permissionsArray += Manifest.permission.ACCESS_BACKGROUND_LOCATION
+                REQUEST_FOREGROUND_AND_BACKGROUND_PERMISSION_RESULT_CODE
+            }
+            else -> REQUEST_FOREGROUND_ONLY_PERMISSIONS_REQUEST_CODE
+        }
+        Log.d("ReminderListFragment", "Request foreground only location permission")
+        requestPermissions(
+                permissionsArray,
+                resultCode
+        )
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        Log.d("ReminderListFramgnet", "onRequestPermissionResult")
+
+        if (
+                grantResults.isEmpty() ||
+                grantResults[LOCATION_PERMISSION_INDEX] == PackageManager.PERMISSION_DENIED ||
+                (requestCode == REQUEST_FOREGROUND_AND_BACKGROUND_PERMISSION_RESULT_CODE &&
+                        grantResults[BACKGROUND_LOCATION_PERMISSION_INDEX] ==
+                        PackageManager.PERMISSION_DENIED))
+        {
+            Snackbar.make(
+                    binding.refreshLayout,
+                    R.string.permission_denied_explanation,
+                    Snackbar.LENGTH_INDEFINITE
+            )
+                    .setAction(R.string.settings) {
+                        startActivity(Intent().apply {
+                            action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+                            data = Uri.fromParts("package", BuildConfig.APPLICATION_ID, null)
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                        })
+                    }.show()
+        } else
+            Log.i("ReminderListFragment", "onRequestPermissionResult permission already granted")
+
+    }
 }
+
+private const val REQUEST_FOREGROUND_AND_BACKGROUND_PERMISSION_RESULT_CODE = 33
+private const val REQUEST_FOREGROUND_ONLY_PERMISSIONS_REQUEST_CODE = 34
+//private const val REQUEST_TURN_DEVICE_LOCATION_ON = 29
+//private const val TAG = "HuntMainActivity"
+private const val LOCATION_PERMISSION_INDEX = 0
+private const val BACKGROUND_LOCATION_PERMISSION_INDEX = 1
