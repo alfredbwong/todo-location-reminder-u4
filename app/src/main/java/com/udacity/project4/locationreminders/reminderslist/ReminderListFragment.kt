@@ -144,6 +144,7 @@ class ReminderListFragment : BaseFragment() {
                 } else {
                     true
                 }
+        Log.i("ReminderListFragment", "foreground : $foregroundLocationApproved background : $backgroundPermissionApproved")
         return foregroundLocationApproved && backgroundPermissionApproved
     }
     @TargetApi(29 )
