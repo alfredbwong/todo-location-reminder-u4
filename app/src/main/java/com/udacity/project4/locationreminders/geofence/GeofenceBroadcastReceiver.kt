@@ -3,6 +3,14 @@ package com.udacity.project4.locationreminders.geofence
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.provider.Settings.Global.getString
+import android.util.Log
+import com.google.android.gms.location.Geofence
+import com.google.android.gms.location.GeofenceStatusCodes
+import com.google.android.gms.location.GeofencingEvent
+import com.udacity.project4.R
+import com.udacity.project4.locationreminders.geofence.GeofenceTransitionsJobIntentService.Companion.enqueueWork
+import com.udacity.project4.utils.sendNotification
 
 /**
  * Triggered by the Geofence.  Since we can have many Geofences at once, we pull the request
@@ -18,6 +26,27 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
 
 //TODO: implement the onReceive method to receive the geofencing events at the background
+        val geofencingEvent = GeofencingEvent.fromIntent(intent)
+        if (geofencingEvent.hasError()) {
+            val errorMessage = GeofenceStatusCodes
+                    .getStatusCodeString(geofencingEvent.errorCode)
+            Log.e("GeofenceReceiver", errorMessage)
+            return
+        }
 
+        // Get the transition type.
+        val geofenceTransition = geofencingEvent.geofenceTransition
+
+        // Test that the reported transition was of interest.
+        if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER) {
+
+            enqueueWork(context,intent)
+
+//            sendNotification(context, geofenceTransitionDetails)
+            Log.i("GeofenceReceiver", "THere was a geofence triggered")
+        } else {
+            // Log the error.
+            Log.e("GeofenceReceiver", "Error on geofence")
+        }
     }
 }
