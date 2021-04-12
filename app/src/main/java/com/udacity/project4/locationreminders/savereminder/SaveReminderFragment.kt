@@ -30,7 +30,7 @@ class SaveReminderFragment : BaseFragment() {
     //Get the view model this time as a single to be shared with the another fragment
     override val _viewModel: SaveReminderViewModel by inject()
     private lateinit var binding: FragmentSaveReminderBinding
-    private val GEOFENCE_DEFAULT_RADIUS = 200f
+    private val GEOFENCE_DEFAULT_RADIUS = 2000f
     private lateinit var geofencingClient: GeofencingClient
 
     companion object{

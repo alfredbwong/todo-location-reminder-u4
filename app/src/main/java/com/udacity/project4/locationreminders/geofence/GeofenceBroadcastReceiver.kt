@@ -26,27 +26,9 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
 
 //TODO: implement the onReceive method to receive the geofencing events at the background
-        val geofencingEvent = GeofencingEvent.fromIntent(intent)
-        if (geofencingEvent.hasError()) {
-            val errorMessage = GeofenceStatusCodes
-                    .getStatusCodeString(geofencingEvent.errorCode)
-            Log.e("GeofenceReceiver", errorMessage)
-            return
-        }
-
-        // Get the transition type.
-        val geofenceTransition = geofencingEvent.geofenceTransition
-
-        // Test that the reported transition was of interest.
-        if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER) {
 
             enqueueWork(context,intent)
 
-//            sendNotification(context, geofenceTransitionDetails)
             Log.i("GeofenceReceiver", "THere was a geofence triggered")
-        } else {
-            // Log the error.
-            Log.e("GeofenceReceiver", "Error on geofence")
-        }
     }
 }
