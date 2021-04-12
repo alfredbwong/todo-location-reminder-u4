@@ -3,6 +3,7 @@ package com.udacity.project4.locationreminders.savereminder.selectreminderlocati
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.content.res.Resources
 import android.os.Bundle
 import android.util.Log
 import android.view.*
@@ -20,6 +21,7 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.MapStyleOptions
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.udacity.project4.R
@@ -41,7 +43,6 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
     private var marker : Marker? = null
     private var isPoISelected = false
-
     override fun onCreateView(
             inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View? {
@@ -121,6 +122,8 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         setPoiClick(map)
         enableMyLocation()
         moveToCurrentLocation()
+        setMapStyle(map)
+
     }
 
 
@@ -222,5 +225,26 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
                 moveToCurrentLocation()
             }
         }
+    }
+    private fun setMapStyle(map: GoogleMap) {
+        try {
+            // Customize the styling of the base map using a JSON object defined
+            // in a raw resource file.
+            val success = map.setMapStyle(
+                    MapStyleOptions.loadRawResourceStyle(
+                            requireContext(),
+                            R.raw.map_style
+                    )
+            )
+            if (!success) {
+                Log.e(TAG, "Style parsing failed.")
+            }
+        }catch (e: Resources.NotFoundException) {
+            Log.e(Companion.TAG, "Can't find style. Error: ", e)
+        }
+    }
+
+    companion object {
+        const val TAG = "SelectLocationFragment"
     }
 }
