@@ -23,6 +23,7 @@ import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.udacity.project4.BuildConfig
 import com.udacity.project4.R
+import com.udacity.project4.authentication.AuthenticationActivity
 import com.udacity.project4.base.BaseFragment
 import com.udacity.project4.base.NavigationCommand
 import com.udacity.project4.databinding.FragmentRemindersBinding
@@ -75,14 +76,18 @@ class ReminderListFragment : BaseFragment() {
                 }
                 RemindersListViewModel.AuthenticationState.UNAUTHENTICATED-> {
                     Log.i("ReminderListFragment", "Unauthenticated user in ReminderFragment")
-                    val navController = findNavController()
-                    navController.navigate(R.id.loginFragment)
+//                    val navController = findNavController()
+//                    navController.navigate(R.layout.activity_authentication)
+                    val intent = Intent(requireContext(), AuthenticationActivity::class.java)
+                    startActivity(intent)
 
                 }
                 RemindersListViewModel.AuthenticationState.INVALID_AUTHENTICATION-> {
                     Log.i("ReminderListFragment", "Invalid authentication in ReminderFragment")
-                    val navController = findNavController()
-                    navController.navigate(R.id.loginFragment)
+//                    val navController = findNavController()
+//                    navController.navigate(R.id.loginFragment)
+                    val intent = Intent(requireContext(), AuthenticationActivity::class.java)
+                    startActivity(intent)
                 }
             }
         })
@@ -229,6 +234,7 @@ class ReminderListFragment : BaseFragment() {
     companion object {
         internal const val ACTION_GEOFENCE_EVENT =
                 "project4.udacity.action.ACTION_GEOFENCE_EVENT"
+        const val SIGN_IN_REQUEST_CODE = 1001
     }
 }
 
