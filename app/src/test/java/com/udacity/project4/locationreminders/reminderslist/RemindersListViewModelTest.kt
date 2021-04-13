@@ -4,6 +4,7 @@ import android.os.Build
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.google.firebase.FirebaseApp
 import com.udacity.project4.locationreminders.data.FakeDataSource
 import com.udacity.project4.locationreminders.data.dto.ReminderDTO
 import com.udacity.project4.locationreminders.getOrAwaitValue
@@ -35,6 +36,8 @@ class RemindersListViewModelTest {
     @Test
     fun loadReminders_getRemindersList() {
         //Given a fresh viewmodel and loaded data
+        FirebaseApp.initializeApp(ApplicationProvider.getApplicationContext())
+
         val reminder1 =ReminderDTO("R1", "R1", "R1-location", 100.0, 100.0, "R1ID" )
         val reminder2 = ReminderDTO("R2", "R2", "R2-location", 200.0, 200.0, "R2ID" )
         val reminder3 = ReminderDTO("R3", "R3", "R3-location", 300.0, 300.0, "R3ID" )
