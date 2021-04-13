@@ -19,7 +19,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.koin.core.context.stopKoin
 import org.robolectric.annotation.Config
-
+@Config(sdk = [Build.VERSION_CODES.O_MR1])
 @RunWith(AndroidJUnit4::class)
 @ExperimentalCoroutinesApi
 class RemindersListViewModelTest {
@@ -32,11 +32,15 @@ class RemindersListViewModelTest {
     private lateinit var testDataSource: FakeDataSource
     private lateinit var testViewModel : RemindersListViewModel
 
-    @Config(sdk = [Build.VERSION_CODES.O_MR1])
+    @Before
+    fun setupWork(){
+        FirebaseApp.initializeApp(ApplicationProvider.getApplicationContext())
+
+    }
+
     @Test
     fun loadReminders_getRemindersList() {
         //Given a fresh viewmodel and loaded data
-        FirebaseApp.initializeApp(ApplicationProvider.getApplicationContext())
 
         val reminder1 =ReminderDTO("R1", "R1", "R1-location", 100.0, 100.0, "R1ID" )
         val reminder2 = ReminderDTO("R2", "R2", "R2-location", 200.0, 200.0, "R2ID" )
@@ -52,6 +56,45 @@ class RemindersListViewModelTest {
         //Then get reminders
         assertThat( testViewModel.remindersList.getOrAwaitValue(), (not(emptyList())))
         assertThat( testViewModel.remindersList.getOrAwaitValue().size, `is`(reminderMapList.size))
+    }
+
+    @Test
+    fun loadReminders_noReminders() {
+        //Given a fresh viewmodel and no loaded data
+        val reminderMapList = linkedMapOf<String, ReminderDTO>()
+        testDataSource = FakeDataSource(reminderMapList)
+        val testViewModel = RemindersListViewModel(ApplicationProvider.getApplicationContext(), testDataSource)
+
+        //When load reminder
+        testViewModel.loadReminders()
+
+        //Then get reminders
+        assertThat(testViewModel.remindersList.getOrAwaitValue(), (`is`(emptyList())))
+        assertThat(testViewModel.showNoData.getOrAwaitValue(), `is`(true))
+
+    }
+
+    @Test
+    fun loadReminders_shouldReturnError(){
+        testDataSource = FakeDataSource(null)
+
+        val testViewModel = RemindersListViewModel(ApplicationProvider.getApplicationContext(), testDataSource)
+
+        //When load reminder
+        testViewModel.loadReminders()
+
+        //Then get reminders
+        assertThat(testViewModel.showSnackBar.getOrAwaitValue(), `is`("Error getting list of reminders"))
+    }
+
+    @Test
+    fun loadReminders_check_loading(){
+        testDataSource = FakeDataSource(linkedMapOf())
+
+        testViewModel = RemindersListViewModel(ApplicationProvider.getApplicationContext(), testDataSource)
+        mainCoroutineRule.pauseDispatcher()
+        testViewModel.loadReminders()
+        assertThat(testViewModel.showLoading.getOrAwaitValue(), `is`(true))
     }
 
     @After

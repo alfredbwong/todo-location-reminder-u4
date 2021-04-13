@@ -14,7 +14,7 @@ import kotlinx.coroutines.launch
 
 class RemindersListViewModel(
     app: Application,
-    private val dataSource: ReminderDataSource
+    private val dataSource: ReminderDataSource?
 ) : BaseViewModel(app) {
 
     enum class AuthenticationState {
@@ -39,7 +39,7 @@ class RemindersListViewModel(
         showLoading.value = true
         viewModelScope.launch {
             //interacting with the dataSource has to be through a coroutine
-            val result = dataSource.getReminders()
+            val result = dataSource?.getReminders()
             showLoading.postValue(false)
             when (result) {
                 is Result.Success<*> -> {
