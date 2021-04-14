@@ -55,23 +55,17 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         setHasOptionsMenu(true)
         setDisplayHomeAsUpEnabled(true)
 
-//        TODO: add the map setup implementation
-//        TODO: zoom to the user location after taking his permission
-//        TODO: add style to the map
-//        TODO: put a marker to location that the user selected
+
         val mapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
-//        TODO: call this function after the user confirms on the selected location
         onLocationSelected()
 
         return binding.root
     }
 
     private fun onLocationSelected() {
-        //        TODO: When the user confirms on the selected location,
-        //         send back the selected location details to the view model
-        //         and navigate back to the previous fragment to save the reminder and add the geofence
+
         binding.saveLocationButton.setOnClickListener{
             if (marker != null) {
                 val lat = marker!!.position.latitude
@@ -92,7 +86,6 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     }
 
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
-        // TODO: Change the map type based on the user's selection.
         R.id.normal_map -> {
             map.mapType = GoogleMap.MAP_TYPE_NORMAL
 

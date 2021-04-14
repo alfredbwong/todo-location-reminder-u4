@@ -24,7 +24,6 @@ import org.robolectric.annotation.Config
 @ExperimentalCoroutinesApi
 class RemindersListViewModelTest {
 
-    //TODO: provide testing to the RemindersListViewModel and its live data objects
     @get:Rule
     var instantExecutorRule = InstantTaskExecutorRule()
     @get:Rule
