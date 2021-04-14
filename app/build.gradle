@@ -119,6 +119,8 @@ dependencies {
     androidTestImplementation "org.mockito:mockito-core:$mockitoVersion"
     androidTestImplementation "com.linkedin.dexmaker:dexmaker-mockito:$dexMakerVersion"
     androidTestImplementation('org.koin:koin-test:2.0.1') { exclude group: 'org.mockito' }
+    androidTestImplementation "it.xabaras.android.espresso:recyclerview-child-actions:1.0"
+
 
     //Multidex - file too big
     implementation 'com.android.support:multidex:1.0.3'
