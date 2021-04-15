@@ -114,7 +114,7 @@ class SaveReminderFragment : BaseFragment() {
                 .build()
         val geofencingRequest: GeofencingRequest = GeofencingRequest.Builder()
                 .addGeofence(geofence)
-                .setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER)
+                .setInitialTrigger(0)
                 .build()
 
         val intent = Intent(requireContext(), GeofenceBroadcastReceiver::class.java)
