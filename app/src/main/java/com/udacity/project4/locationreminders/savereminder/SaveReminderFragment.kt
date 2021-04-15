@@ -30,11 +30,13 @@ class SaveReminderFragment : BaseFragment() {
     //Get the view model this time as a single to be shared with the another fragment
     override val _viewModel: SaveReminderViewModel by inject()
     private lateinit var binding: FragmentSaveReminderBinding
-    private val GEOFENCE_DEFAULT_RADIUS = 2000f
     private lateinit var geofencingClient: GeofencingClient
 
     companion object{
         const val TAG = "SaveReminderFragment"
+        const val GEOFENCE_EXPIRATION_IN_MILLISECONDS: Long = 10000
+        const val GEOFENCE_DEFAULT_RADIUS = 100f
+
     }
 
     override fun onCreateView(
@@ -55,7 +57,7 @@ class SaveReminderFragment : BaseFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         Log.i("SaveReminderFragment", "onViewCreated save reminder ")
-        geofencingClient = LocationServices.getGeofencingClient(context!!)
+        geofencingClient = LocationServices.getGeofencingClient(requireActivity().applicationContext)
 
         binding.lifecycleOwner = this
         binding.selectLocation.setOnClickListener {
@@ -78,6 +80,9 @@ class SaveReminderFragment : BaseFragment() {
                     latitude.value,
                     longitude
             )
+            Log.i("SaveReminderFragment", "Save this marker $title, $latitude.value $longitude")
+
+            _viewModel.validateAndSaveReminder(reminderToSave)
 
             if (latitude != null &&
                    longitude != null
@@ -85,8 +90,6 @@ class SaveReminderFragment : BaseFragment() {
                 addGeofenceRequest(reminderToSave.id, reminderToSave.latitude, reminderToSave.longitude!!, GEOFENCE_DEFAULT_RADIUS)
             }
 
-            Log.i("SaveReminderFragment", "Save this marker $title, $latitude.value $longitude")
-            _viewModel.validateAndSaveReminder(reminderToSave)
         }
     }
 
@@ -105,7 +108,7 @@ class SaveReminderFragment : BaseFragment() {
         val geofence: Geofence = Geofence.Builder()
                 .setCircularRegion(latitude!!, longitude, radius)
                 .setRequestId(geofenceId)
-                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER  or Geofence.GEOFENCE_TRANSITION_EXIT)
+                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER)
                 .setExpirationDuration(Geofence.NEVER_EXPIRE)
                 .setLoiteringDelay(5000)
                 .build()
