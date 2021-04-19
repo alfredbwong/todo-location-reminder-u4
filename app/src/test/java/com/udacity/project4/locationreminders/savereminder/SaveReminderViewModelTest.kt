@@ -54,6 +54,8 @@ class SaveReminderViewModelTest {
             testViewModel.validateAndSaveReminder(reminderToSave)
         }
         assertThat(testViewModel.showLoading.getOrAwaitValue(), `is`(true))
+        mainCoroutineRule.resumeDispatcher()
+        assertThat(testViewModel.showLoading.getOrAwaitValue(), `is`(false))
 
     }
 
