@@ -94,6 +94,10 @@ class RemindersListViewModelTest {
         mainCoroutineRule.pauseDispatcher()
         testViewModel.loadReminders()
         assertThat(testViewModel.showLoading.getOrAwaitValue(), `is`(true))
+        mainCoroutineRule.resumeDispatcher()
+        assertThat(testViewModel.showLoading.getOrAwaitValue(), `is`(false))
+
+
     }
 
     @After
