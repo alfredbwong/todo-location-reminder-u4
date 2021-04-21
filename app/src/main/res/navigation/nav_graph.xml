@@ -32,10 +32,5 @@
         android:id="@+id/selectLocationFragment"
         android:name="com.udacity.project4.locationreminders.savereminder.selectreminderlocation.SelectLocationFragment"
         android:label="Select Location" />
-    <fragment
-        android:id="@+id/loginFragment"
-        android:name="com.udacity.project4.login.LoginFragment"
-        android:label="fragment_login"
-        tools:layout="@layout/fragment_login" />
 
 </navigation>
